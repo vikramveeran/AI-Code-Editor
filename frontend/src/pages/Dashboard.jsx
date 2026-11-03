@@ -3,16 +3,19 @@ import { FcGoogle } from "react-icons/fc";
 import { signInWithPopup } from 'firebase/auth';
 import { login } from '../features/login';
 import { auth, googleProvider } from '../firebase';
+import { useDispatch } from 'react-redux';
+import { setUserData } from '../redux/userSlice';
 
 const Dashboard = () => {
     const [loading, setLoading] = useState(false)
-
+   const dispatch = useDispatch()
     const handleLogin = async () => {
         setLoading(true)
         try {
             const result = await signInWithPopup(auth, googleProvider)
             const token = await result.user.getIdToken()
             const data = await login(token)
+            dispatch(setUserData(data))
         } catch (error) {
             console.error("Login failed:", error)
         } finally {
