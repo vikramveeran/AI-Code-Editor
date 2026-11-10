@@ -18,6 +18,7 @@ app.use(cors({
 app.use(cookieParser())
 app.use(morgan("dev"))
 app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
+app.use("/api/project",protect,proxy(process.env.PROJECT_SERVICE))
 api.get("/api/me",protect,getCurrentUser)
 
 app.get("/",(req,res)=>{
