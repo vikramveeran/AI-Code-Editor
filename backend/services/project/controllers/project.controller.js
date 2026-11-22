@@ -1,4 +1,5 @@
 import { json } from "express"
+import redis from "../../../shared/redis/redis.js"
 import Project from "../models/project.model.js"
 
 export const createProject=async (req,res) => {
@@ -32,13 +33,19 @@ export const getProjects=async (req,res) => {
         return res.status(401).json({message:"userid is required"})
       }
 
+     const key=`projects-${userId}`
+          let result=await redis.get(key)
+          if(result){
+            return res.status(200).json(JSON.parse(result))
+          }
     
 
       const projects=await Project.find({
         owner:userId
       }).sort({updatedAt:-1})
       
-  
+      await redis.set(key,JSON.stringify(projects))
+     
 
       return res.status(200).json(projects)
       
@@ -107,3 +114,22 @@ export const toggleStar=async (req,res) => {
     }
 }
 
+
+
+export const deleteProject=async (req,res) => {
+   try {
+  
+      const {id}=req.params
+      const project=await Project.findByIdAndDelete(id)
+      if(!project){
+        return res.status(404).json({message:"project not found"})
+      }
+     
+   
+
+      return res.status(200).json(project)
+
+    } catch (error) {
+        return res.status(500).json({message:`project delete error ${error}`})
+    }
+}
