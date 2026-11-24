@@ -17,8 +17,13 @@ export const createProject=async (req,res) => {
         description
       })
 
+        const key=`projects-${userId}`
+      
+            await redis.del(key)
 
       return res.status(201).json(project)
+
+
 
     } catch (error) {
         return res.status(500).json({message:`create project error ${error}`})
@@ -81,11 +86,17 @@ export const getStarredProjects=async (req,res) => {
         return res.status(401).json({message:"userid is required"})
       }
 
+          const key=`starred-projects-${userId}`
+          let result=await redis.get(key)
+          if(result){
+             return res.status(200).json(JSON.parse(result))
+          }
       const projects=await Project.find({
         owner:userId,
         starred:true
       }).sort({updatedAt:-1})
 
+      await redis.set(key,JSON.stringify(projects))
 
       return res.status(200).json(projects)
 
@@ -106,7 +117,7 @@ export const toggleStar=async (req,res) => {
       project.starred=!project.starred
       await project.save()
       const key=`starred-projects-${userId}`
-      
+      await redis.del(key)
       return res.status(200).json(project)
 
     } catch (error) {
@@ -125,7 +136,9 @@ export const deleteProject=async (req,res) => {
         return res.status(404).json({message:"project not found"})
       }
      
-   
+           const key=`projects-${userId}`
+            await redis.del(key)
+      
 
       return res.status(200).json(project)
 
